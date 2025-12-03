@@ -8,7 +8,7 @@ namespace JiraEntegrasyonApi.Services
     public class JiraService
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration _configuration; 
 
         public JiraService(HttpClient httpClient, IConfiguration configuration)
         {
@@ -16,26 +16,54 @@ namespace JiraEntegrasyonApi.Services
             _configuration = configuration;
         }
 
+        private async Task<CozulmusBilgiler> GizliBilgileriGetirAsync()
+        {
+            using var karsiSirketClient = new HttpClient(); 
+            var response = await karsiSirketClient.GetAsync("http://localhost:5200/token-al");
+            
+            if (!response.IsSuccessStatusCode) 
+                throw new Exception("Karşı şirket servisi (AuthServer) cevap vermiyor! Port 5200 açık mı?");
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var gelenPaket = JsonSerializer.Deserialize<KarsiSirketResponse>(jsonString, options);
+
+            if (gelenPaket == null || string.IsNullOrEmpty(gelenPaket.EncryptedPayload))
+                throw new Exception("Karşı şirketten boş veri geldi!");
+
+
+            string masterKey = _configuration["GizliKasa:EncryptionKey"];
+
+            if (string.IsNullOrEmpty(masterKey))
+                throw new Exception("HATA: appsettings.json dosyasında 'EncryptionKey' bulunamadı!");
+
+            if (masterKey.Length != 32)
+                throw new Exception("HATA: EncryptionKey tam 32 karakter olmalıdır!");
+
+            string temizJson = SecurityHelper.SifreyiCoz(gelenPaket.EncryptedPayload, masterKey);
+
+            var cozulmusVeri = JsonSerializer.Deserialize<CozulmusBilgiler>(temizJson, options);
+            
+            if (cozulmusVeri == null) throw new Exception("Şifre çözüldü ama veri formatı hatalı.");
+
+            return cozulmusVeri;
+        }
+
         public async Task<string> CreateTaskAsync(TaskRequestDto gelenVeri)
         {
-            var settings = _configuration.GetSection("JiraSettings");
-            var baseUrl = settings["BaseUrl"];
-            var email = settings["Email"];
-            var apiToken = settings["ApiToken"];
-            var projectKey = settings["ProjectKey"];
+            var kimlik = await GizliBilgileriGetirAsync();
 
-            // 1. Basic Auth Header Oluşturma
-            var authString = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{email}:{apiToken}"));
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
+            var authBytes = Encoding.ASCII.GetBytes($"{kimlik.JiraEmail}:{kimlik.JiraToken}");
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
 
-            // 2. Senin Verini Jira Formatına Çevirme (Mapping)
-            var jiraPayload = new JiraPayload
+             var jiraPayload = new JiraPayload
             {
                 fields = new JiraFields
                 {
-                    project = new JiraKey { key = projectKey },
+                    project = new JiraKey { key = kimlik.ProjectKey }, 
                     summary = $"{gelenVeri.Modul} - {gelenVeri.HataBasligi}",
-                    issuetype = new JiraName { name = "Task" }, // Veya "Bug"
+                    issuetype = new JiraName { name = "Task" },
                     description = new JiraDescription
                     {
                         content = new List<JiraContent>
@@ -44,10 +72,7 @@ namespace JiraEntegrasyonApi.Services
                             {
                                 content = new List<JiraTextContent>
                                 {
-                                    new JiraTextContent 
-                                    { 
-                                        text = $"Modül: {gelenVeri.Modul}\nÖncelik: {gelenVeri.Oncelik}\n\nDetay:\n{gelenVeri.Detay}" 
-                                    }
+                                    new JiraTextContent { text = $"Öncelik: {gelenVeri.Oncelik}\nDetay: {gelenVeri.Detay}" }
                                 }
                             }
                         }
@@ -55,22 +80,16 @@ namespace JiraEntegrasyonApi.Services
                 }
             };
 
-            // 3. Gönderim
             var jsonContent = JsonSerializer.Serialize(jiraPayload);
             var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync($"{baseUrl}/rest/api/3/issue", httpContent);
+            // Jira Base URL'si
+            var response = await _httpClient.PostAsync("https://eypcnbay.atlassian.net/rest/api/3/issue", httpContent);
 
             if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsStringAsync(); // Başarılı JSON döner (Issue Key, ID vs.)
-            }
+                return await response.Content.ReadAsStringAsync();
             else
-            {
-                // Hata durumunda Jira'nın verdiği hata mesajını fırlat
-                var errorMsg = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Jira Hatası: {errorMsg}");
-            }
+                throw new Exception($"Jira Hatası: {await response.Content.ReadAsStringAsync()}");
         }
     }
 }

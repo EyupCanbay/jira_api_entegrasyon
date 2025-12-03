@@ -1,12 +1,14 @@
+using System.Text.Json.Serialization;
+
 namespace JiraEntegrasyonApi.Models
 {
-    // string yerine string? yazıyoruz
     public class TaskRequestDto
     {
         public string? HataBasligi { get; set; }
         public string? Detay { get; set; }
         public string? Modul { get; set; }
         public string? Oncelik { get; set; }
+        public int? HedefSprintId { get; set; } 
     }
 
     public class JiraPayload

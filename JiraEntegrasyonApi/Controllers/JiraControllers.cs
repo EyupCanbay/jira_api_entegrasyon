@@ -20,7 +20,6 @@ namespace JiraEntegrasyonApi.Controllers
         {
             try
             {
-                // Basit bir validasyon
                 if (string.IsNullOrEmpty(request.HataBasligi))
                     return BadRequest("Hata başlığı boş olamaz.");
 
@@ -29,7 +28,6 @@ namespace JiraEntegrasyonApi.Controllers
             }
             catch (Exception ex)
             {
-                // Gerçek hayatta loglama yapılır
                 return StatusCode(500, new { message = ex.Message });
             }
         }
