@@ -32,3 +32,4 @@ C:\Users\canbay\Desktop\jira_api_entegrasyon\JiraEntegrasyonApi\obj\Debug\net8.0
 C:\Users\canbay\Desktop\jira_api_entegrasyon\JiraEntegrasyonApi\obj\Debug\net8.0\JiraEntegrasyonApi.pdb
 C:\Users\canbay\Desktop\jira_api_entegrasyon\JiraEntegrasyonApi\obj\Debug\net8.0\JiraEntegrasyonApi.genruntimeconfig.cache
 C:\Users\canbay\Desktop\jira_api_entegrasyon\JiraEntegrasyonApi\obj\Debug\net8.0\ref\JiraEntegrasyonApi.dll
+C:\Users\canbay\Desktop\jira_api_entegrasyon\JiraEntegrasyonApi\obj\Debug\net8.0\JiraEntegrasyonApi.sourcelink.json

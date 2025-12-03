@@ -25,3 +25,4 @@ C:\Users\canbay\Desktop\jira_api_entegrasyon\KarşıŞirketinTokenVerenServisi\o
 C:\Users\canbay\Desktop\jira_api_entegrasyon\KarşıŞirketinTokenVerenServisi\obj\Debug\net9.0\KarşıŞirketinTokenVerenServisi.pdb
 C:\Users\canbay\Desktop\jira_api_entegrasyon\KarşıŞirketinTokenVerenServisi\obj\Debug\net9.0\KarşıŞirketinTokenVerenServisi.genruntimeconfig.cache
 C:\Users\canbay\Desktop\jira_api_entegrasyon\KarşıŞirketinTokenVerenServisi\obj\Debug\net9.0\ref\KarşıŞirketinTokenVerenServisi.dll
+C:\Users\canbay\Desktop\jira_api_entegrasyon\KarşıŞirketinTokenVerenServisi\obj\Debug\net9.0\KarşıŞirketinTokenVerenServisi.sourcelink.json

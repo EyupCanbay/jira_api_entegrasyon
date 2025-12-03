@@ -5,6 +5,9 @@ var app = builder.Build();
 
 app.Urls.Add("http://localhost:5200");
 
+
+app.UseMiddleware<FirewallMiddleware>();
+
 app.MapGet("/token-al", (IConfiguration config) =>
 {
     var email = config["GizliKasa:JiraEmail"];
@@ -12,19 +15,19 @@ app.MapGet("/token-al", (IConfiguration config) =>
     var projectKey = config["GizliKasa:ProjectKey"];
     var masterKey = config["GizliKasa:EncryptionKey"]; 
 
-    if (string.IsNullOrEmpty(masterKey)) return Results.Problem("Encryption Key bulunamadı!");
-
     var gercekBilgiler = new
     {
         JiraEmail = email,
         JiraToken = token,
-        ProjectKey = projectKey,
+        ProjectKey = projectKey
     };
 
     string jsonHali = JsonSerializer.Serialize(gercekBilgiler);
-
+    
+    // Veriyi AES-256 ile şifreler
     string sifreliData = SecurityHelper.Sifrele(jsonHali, masterKey);
 
+    Console.WriteLine("[SUCCESS] Güvenli istek başarıyla yanıtlandı.");
     return Results.Ok(new { EncryptedPayload = sifreliData });
 });
 
