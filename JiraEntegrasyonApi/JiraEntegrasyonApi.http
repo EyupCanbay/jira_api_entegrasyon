@@ -1,4 +1,4 @@
-@JiraEntegrasyonApi_HostAddress = http://localhost:5101
+@JiraEntegrasyonApi_HostAddress = http://localhost:5136
 
 GET {{JiraEntegrasyonApi_HostAddress}}/weatherforecast/
 Accept: application/json
